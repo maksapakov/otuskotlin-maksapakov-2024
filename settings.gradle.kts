@@ -11,4 +11,6 @@ plugins {
 rootProject.name = "otuskotlin-maksapakov-2024"
 
 include("m1l1-first")
-
+include("learning-modules")
+include("plugin")
+include("project-modules")
