@@ -1,0 +1,124 @@
+# Адреса
+# Приложение доступно по http://localhost:8080 (envoy proxy)
+# Панель мониторинга доступна по http://localhost:5601 (opensearch, kibana)
+# Управление пользователями доступно по http://localhost:8080/admin (keycloak)
+
+services:
+
+  app:
+    image: nginx:latest
+    container_name: nginx
+    depends_on:
+      - fluent-bit
+      - envoy
+    volumes:
+      - ./volumes/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./volumes/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./volumes/nginx/html:/usr/share/nginx/html
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "localhost:24224"
+        tag: "app.logs"
+
+  fluent-bit:
+    container_name: fluent-bit
+    image: fluent/fluent-bit:latest
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+      - "2020:2020"
+    environment:
+      - opensearch_host=opensearch
+      - opensearch_user=admin
+      - opensearch_pass=adm-Pass101
+    volumes:
+      - ./volumes/fluent-bit-etc/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./volumes/fluent-bit-etc/parser.conf:/fluent-bit/etc/parser.conf
+
+  opensearch:
+    container_name: opensearch
+    image: opensearchproject/opensearch:latest
+    environment:
+      - discovery.type=single-node
+      - http.port=9200
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=adm-Pass101
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -ku admin:adm-Pass101 https://localhost:9200/_cluster/health?pretty | grep status | grep -q '\\(green\\|yellow\\)'"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    expose:
+      - "5601"
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch:9200"]'
+    depends_on:
+      opensearch:
+        condition: service_healthy
+
+  envoy:
+    image: envoyproxy/envoy:v1.29.0
+    volumes:
+      - ./volumes/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "8080:8080"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.0
+    container_name: keycloak
+    volumes:
+      - ./volumes/keycloak/import:/opt/keycloak/data/import
+    environment:
+      KEYCLOAK_USER: maksapakov
+      KEYCLOAK_PASSWORD: maksapakov
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KEYCLOAK_IMPORT: /tmp/realm-export.json
+      KC_HEALTH_ENABLED: true
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'HEAD /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3;cat <&3"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    command:
+      - start-dev
+      - --import-realm
+      - --hostname-strict
+      - "false"
+      - --hostname
+      - "http://localhost:8080/"
+      - --proxy-headers
+      - forwarded
+      - --hostname-backchannel-dynamic
+      - "true"
+
+volumes:
+  opensearch_data:
