@@ -26,4 +26,4 @@ plugins {
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-include(":ok-maksapakov-tmp")
+include(":ok-ninjacat-tmp")

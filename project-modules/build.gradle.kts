@@ -3,5 +3,5 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
 }
 
-group = "ru.otus.kotlin.maksapakov"
+group = "ru.otus.kotlin.ninjacat"
 version = "0.0.1"
