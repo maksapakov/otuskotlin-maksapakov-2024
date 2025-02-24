@@ -16,3 +16,10 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 }
+
+tasks {
+    create("check") {
+        group = "verification"
+        dependsOn(gradle.includedBuild("project-modules").task(":check"))
+    }
+}
