@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "2.1.0"
 }
 
-group = "ru.otus.kotlin.maksapakov"
+group = "ru.otus.kotlin.ninjacat"
 version = "0.0.1"
 
 repositories {

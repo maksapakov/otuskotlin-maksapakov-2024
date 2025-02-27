@@ -8,7 +8,7 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
 
-rootProject.name = "otuskotlin-maksapakov-202411"
+rootProject.name = "otuskotlin-ninjacat-2024"
 
-includeBuild("learning-modules")
+//includeBuild("learning-modules")
 includeBuild("project-modules")

@@ -6,11 +6,11 @@ gradlePlugin {
     plugins {
         register("build-jvm") {
             id = "build-jvm"
-            implementationClass = "ru.otus.kotlin.maksapakov.JvmBuildPlugin"
+            implementationClass = "ru.otus.kotlin.ninjacat.JvmBuildPlugin"
         }
         register("build-multiplatform") {
             id = "build-multiplatform"
-            implementationClass = "ru.otus.kotlin.maksapakov.MultiplatformBuildPlugin"
+            implementationClass = "ru.otus.kotlin.ninjacat.MultiplatformBuildPlugin"
         }
     }
 }
